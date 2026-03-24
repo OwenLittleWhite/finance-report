@@ -2836,65 +2836,6 @@ revChart.setOption({{
     return html
 
 
-# ══════════════════════════════════════════════════════════════
-#  Full Report (extends simple with additional pages)
-# ══════════════════════════════════════════════════════════════
-
-def generate_full_html(data: StockData, valuation: dict):
-    """Generate full comprehensive report (simple 2-page + extra pages)."""
-    simple = generate_simple_html(data, valuation)
-    additional = build_full_additional_pages(data, valuation)
-    return simple.replace('</body>', additional + '</body>')
-
-
-def build_full_additional_pages(data: StockData, valuation: dict):
-    """Build additional pages for the full report."""
-    return f'''
-<!-- ════════ PAGE 3: Sensitivity & Extended Analysis ════════ -->
-<div class="page">
-    <div>
-        <div class="sec-title">估值敏感性分析</div>
-        {build_sensitivity_table(data, valuation)}
-    </div>
-    <div style="margin-top:8px;">
-        <div class="sec-title">补充说明</div>
-        <div class="biz-text">
-            本报告基于东方财富公开数据自动生成。财务数据来源于公司定期报告，
-            估值方法根据行业特性自动选择。投资者应结合自身风险偏好和投资目标，
-            审慎做出投资决策。过往业绩不代表未来表现。
-        </div>
-    </div>
-    <div class="footer">数据来源: 东方财富 | AI 自动生成 | 第 3 页</div>
-</div>
-'''
-
-
-def build_sensitivity_table(data: StockData, valuation: dict):
-    """PE or PB sensitivity table."""
-    pe = data.pe_ttm
-    eps_val = data.eps_ttm
-    if not eps_val or not pe or pe <= 0:
-        return '<div class="biz-text" style="color:#999;">数据不足，无法生成敏感性分析</div>'
-
-    pe_range = [round(pe * m, 1) for m in [0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3]]
-    eps_range = [round(eps_val * m, 2) for m in [0.85, 0.95, 1.0, 1.05, 1.15]]
-
-    header = '<th>EPS \\ PE</th>' + ''.join(f'<th>{p:.1f}x</th>' for p in pe_range)
-    rows = ''
-    for e in eps_range:
-        cells = f'<td style="font-weight:600;">{e:.2f}</td>'
-        for p in pe_range:
-            val = round(e * p, 2)
-            style = ' style="background:#d5f5e3;font-weight:600;"' if abs(p - pe) < 1 and abs(e - eps_val) < 0.05 else ''
-            cells += f'<td{style}>{val:.2f}</td>'
-        rows += f'<tr>{cells}</tr>'
-
-    return f'''<table class="ft">
-        <thead><tr>{header}</tr></thead>
-        <tbody>{rows}</tbody>
-    </table>
-    <div style="font-size:6.5pt;color:#999;margin-top:2px;">* 绿色高亮为当前估值水平附近</div>'''
-
 
 # ══════════════════════════════════════════════════════════════
 #  PDF Conversion
@@ -2932,13 +2873,12 @@ def html_to_pdf(html_path, pdf_path):
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: python generate_report.py <data_dir> [simple|full] [output.pdf]")
-        print("  version defaults to 'simple', output defaults to <data_dir>/report.pdf")
+        print("Usage: python generate_report.py <data_dir> [output.pdf]")
+        print("  output defaults to <data_dir>/report.pdf")
         sys.exit(1)
 
     data_dir = sys.argv[1]
-    version = sys.argv[2] if len(sys.argv) >= 3 else 'simple'
-    output_pdf = sys.argv[3] if len(sys.argv) >= 4 else os.path.join(data_dir, 'report.pdf')
+    output_pdf = sys.argv[2] if len(sys.argv) >= 3 else os.path.join(data_dir, 'report.pdf')
 
     if not os.path.isdir(data_dir):
         print(f"Error: data directory not found: {data_dir}")
@@ -2966,11 +2906,8 @@ def main():
     if scenarios:
         print(f"  Scenarios: Bear={scenarios.get('bear',0):.2f} / Base={scenarios.get('base',0):.2f} / Bull={scenarios.get('bull',0):.2f}")
 
-    print(f"\nGenerating {version} report...")
-    if version == 'full':
-        html = generate_full_html(data, valuation)
-    else:
-        html = generate_simple_html(data, valuation)
+    print(f"\nGenerating report...")
+    html = generate_simple_html(data, valuation)
 
     html_path = output_pdf.rsplit('.', 1)[0] + '.html'
     with open(html_path, 'w', encoding='utf-8') as f:

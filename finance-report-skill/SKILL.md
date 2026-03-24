@@ -19,7 +19,7 @@ Step 5: Claude 审核 PDF，发现问题则修改 analysis.json 重新生成
 
 ## Step 1: Get User Input
 
-Ask the user for a **6-digit A-share stock code** (e.g., `601318`). Default to 简单版 (2-page).
+Ask the user for a **6-digit A-share stock code** (e.g., `601318`).
 
 ## Step 2: Fetch Data
 
@@ -200,7 +200,7 @@ Page 2 空间有限，每段 commentary 需控制长度：
 | 公用事业 | PE | 股息率 |
 | 其他 | PE + PB | — |
 
-## Report Structure (简单版 2 Pages)
+## Report Structure (2 Pages)
 
 **Page 1**: 标题+评级 → 9格指标 → 核心观点 → 股价走势图+评论 → 财务预测表(年度+预测)+评论 → 业务概述 → 公司信息 → 主营构成图
 
